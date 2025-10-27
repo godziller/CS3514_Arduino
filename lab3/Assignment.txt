@@ -1,0 +1,9 @@
+Write a program and build the appropriate circuit to simultaneously read the values on Port D of the Arduino (Digital Pins 0..7).
+
+Turn on a Red LED connected to Port PB0 (i.e., Pin8) if any two adjacent pins in the Port are HIGH and turn on a Green LED connected to Port PB1 (i.e., Pin9) if any two adjacent pins are LOW.
+
+Note: you can connect the Port D pins to +5v or to 0v with wires. As you change the connections, your program should illuminate the LEDs appropriately.
+
+WARNING: disconnect Pins 0 and 1 before uploading code.
+
+You may NOT use and digitalWrite(), digitalRead(), or pinMode() . Doing so will result in a grade of 0%.

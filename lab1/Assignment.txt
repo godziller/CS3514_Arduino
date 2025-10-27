@@ -1,0 +1,15 @@
+Assignment:
+
+Create a circuit with two switches S1 and S2 and two LEDs L1 and L2.
+
+Configure each switch input to be PULL-UP.
+
+When S1 is pressed L1 should toggle indicating that S2 is enabled or disabled.
+
+When L1 is illuminated, pressing S2 should illuminate L2, releasing S2 should extinguish L2.
+
+When L1 is extinguished, pressing S2 should have no effect on L2 
+
+Note 1: A simple delay of 100ms can be used to debounce S1. 
+
+Note 2: No debouncing is needed for S2.

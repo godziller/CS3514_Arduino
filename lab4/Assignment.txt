@@ -1,0 +1,17 @@
+Create an  appropriate circuit and associated code in which 6 LEDs illuminate in sequence back and forth.
+
+The speed of the illumination should alter depending on the ambiant light level. The darker, the faster.
+
+ 
+
+Hint: Use an LDR and voltage divider circuit. Make use of the map() function. You may use the analogRead() function.
+
+Think of constructing your solution in parts. There is the LED "chase" part, the ambient light level measurement part. Can code be written to test and calibrate the ambient light level part? How should the speed of the "chase" change with that value? Is there a maximum speed, a minimum speed? Your report could detail each of these separate investigations.
+
+Avoid using the digitalWrite() and pinMode functions. Use DDRx and PORTx. 
+
+Pay attention to submitting a properly drawn and labelled circuit diagram.
+
+Comment your program appropriately.
+
+Read the submission instructions.

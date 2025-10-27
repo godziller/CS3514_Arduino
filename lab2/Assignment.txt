@@ -1,0 +1,3 @@
+Task
+
+Adapt the interlock2.ino sample solution of Lab 1 to replace digitalWrite() and  digitalRead() function calls with appropriate PORTD and PIND instructions.
