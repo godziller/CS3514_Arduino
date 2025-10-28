@@ -56,10 +56,6 @@ void readSensorValues(unsigned int *delayTime, unsigned int *pwmValue) {
   *delayTime = (unsigned int)map(sensorVal, MIN_SENSOR_VAL, MAX_SENSOR_VAL, MAX_DELAY, MIN_DELAY);
   *pwmValue = (unsigned int)map(sensorVal, MIN_SENSOR_VAL, MAX_SENSOR_VAL, PWM_MIN, PWM_MAX);
   
-  // Constrain values to valid ranges as safety measure
-  *delayTime = constrain(*delayTime, MIN_DELAY, MAX_DELAY);
-  *pwmValue = constrain(*pwmValue, 0, 255);
-  
   DEBUG_PRINT("  Sensor: ");
   DEBUG_PRINT(sensorVal);
   DEBUG_PRINT(", Delay: ");
