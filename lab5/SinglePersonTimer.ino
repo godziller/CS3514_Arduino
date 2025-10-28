@@ -2,22 +2,27 @@
 // Choosing to use the same port for button and led - PORTB.
 // But naming carefully with _B, so coder understands dealing with 
 // PORTB. 
-
-// Sets a bit in PORTB 
 #define SET_BIT_B(BIT) (PORTB |= (1 << BIT))
-
-// Clears a bit in PORTB low 
 #define CLR_BIT_B(BIT) (PORTB &= ~(1 << BIT))
-
-// Reads the state of a specific pin
-// True = High, False = Low.
 #define READ_BIT_B(BIT) (PINB & (1 << BIT))
+
+// --- PORTD MACROS (Pins D0-D7 - NEW FOR BUTTONS) ---
+// Sets a bit in PORTD (Used to enable PULLUP if pin is input)
+#define SET_BIT_D(BIT) (PORTD |= (1 << BIT))
+// Clears a bit in PORTD low 
+// *** CRITICAL FIX: This macro must target DDRD to set the pin as an INPUT (0) ***
+#define CLR_BIT_D(BIT) (DDRD &= ~(1 << BIT)) 
+// Reads the state of a specific pin
+#define READ_BIT_D(BIT) (PIND & (1 << BIT))
 
 
 // --- PIN DEFINITIONS ---
-// Reflect how we wire our solution - Pin8 for LED, pin 13 for button.
+// Reflect how we wire our solution - Pin8 for LED, pin 5 for Start, pin 6 for Stop.
 #define START_LED_BIT PB0   // Pin 8 (PB0) is the start signal LED.
-#define BUTTON_BIT PB5      // Pin 13 (PB5) is the button pin.
+
+// Pins D5/D6 are used for buttons and belong to PORTD
+#define START_BUTTON_BIT PD5 // Pin 5 (PD5) is the button to START the game.
+#define STOP_BUTTON_BIT PD6  // Pin 6 (PD6) is the button to STOP/calc reaction.
 
 // Assignment Constraints for random number range
 // Used for random number/ wait time generation.
@@ -53,7 +58,7 @@ void resetScoreboard();
 
 
 void setup() {
-  // Set up serial so we can see what's going on.
+  // Set up serial so we can see what's on.
   Serial.begin(9900); 
   
   // Arduino random function needs setup, so I need to initialize it
@@ -64,12 +69,24 @@ void setup() {
   Serial.println("Game ON!");
 
   // Set up input and output configuration - LED->out, Button->in
-  DDRB |= (1 << START_LED_BIT); 
-  DDRB &= ~(1 << BUTTON_BIT);  
+  
+  // LED (PORTB) Setup: Pin D8 (PB0) is OUTPUT
+  DDRB |= (1 << START_LED_BIT); // D8 (LED) is OUTPUT
+  
+  // BUTTONS (PORTD) Setup
+  
+  // We use the CLR_BIT_D macro (now fixed to target DDRD) 
+  // to explicitly set D5 and D6 as INPUTS (DDR bit = 0)
+  CLR_BIT_D(START_BUTTON_BIT); // D5 (Start Button) is INPUT
+  CLR_BIT_D(STOP_BUTTON_BIT);  // D6 (Stop Button) is INPUT
 
   // Need to turn off LED and enable button for PULLUP
-  CLR_BIT_B(START_LED_BIT);  
-  SET_BIT_B(BUTTON_BIT);   
+  CLR_BIT_B(START_LED_BIT);  // D8 LED OFF
+  
+  // Enable PULLUP for both buttons by setting the PORTD bits
+  // We use the SET_BIT_D macro (which targets PORTD)
+  SET_BIT_D(START_BUTTON_BIT); // D5 Enable PULLUP
+  SET_BIT_D(STOP_BUTTON_BIT);  // D6 Enable PULLUP
 }
 
 
@@ -78,16 +95,17 @@ void loop() {
   // We begin with a print to screen
   Serial.println("\nPress Button to start game!");
   
-  // A loop waiting for user to press button.
-  while (READ_BIT_B(BUTTON_BIT)) {
+  // A loop waiting for user to press button (Start Button - D5).
+  // The loop waits while the button is HIGH (unpressed).
+  while (READ_BIT_D(START_BUTTON_BIT)) {
     // Using debounce because especially this game likely to happen.
     delay(50); 
   }
   
   // Need this also because the player may have kept the button
   // depressed. So this waits for the button to be released.
-  
-  while (!READ_BIT_B(BUTTON_BIT)) { 
+  // The loop waits while the button is LOW (pressed).
+  while (!READ_BIT_D(START_BUTTON_BIT)) { 
     // Using debounce because especially this game likely to happen.
     delay(50); 
   }
@@ -96,7 +114,7 @@ void loop() {
 
   // Generate a random wait/backoff time and get a start time
   // recorded for the game.
-  randomWaitTime = random(WAIT_MIN, WAIT_MAX); 
+  randomWaitTime = random(WAIT_MIN, WAIT_MAX + 1); 
   unsigned long randomStartTime = millis();
 
   // Countdown loop, take current time from the recorded start time
@@ -105,10 +123,10 @@ void loop() {
   while (millis() - randomStartTime < randomWaitTime) {
     
     // Is while we are waiting here for the go signal
-    // that a player may falsely press the button.
+    // that a player may falsely press the button (Stop Button - D6).
     // if they do that we need to clear out all the game stats data
     // they lose big time!!
-    if (!READ_BIT_B(BUTTON_BIT)) {
+    if (!READ_BIT_D(STOP_BUTTON_BIT)) {
       // Ooops - too soon!!
       Serial.println("\n!!! TOO IMPATIENT!!  !!!");
       Serial.println("Looser!! All your game data in the bin!!.");
@@ -118,7 +136,7 @@ void loop() {
       
       // Need this also because the player may have kept the button
       // depressed. So this waits for the button to be released.
-      while (!READ_BIT_B(BUTTON_BIT)) {
+      while (!READ_BIT_D(STOP_BUTTON_BIT)) {
           // Wait for release
       } 
       // random delay to exit
@@ -133,11 +151,11 @@ void loop() {
   
   // Immediately start the timer to time the user reaction.
   startTime = micros(); 
-  Serial.println("GO! GO! GO!, PRESS BUTTON!!");
+  Serial.println("GO! GO! GO!, PRESS STOP BUTTON (D6)!!");
   
   
-  // Loop while the button is UNPRESSED (PINB bit 5 is HIGH)
-  while (READ_BIT_B(BUTTON_BIT)) {
+  // Loop while the button is UNPRESSED (Stop Button - D6 is HIGH)
+  while (READ_BIT_D(STOP_BUTTON_BIT)) {
     // Breaking out of this signals Player has pressed button.
   }
 
