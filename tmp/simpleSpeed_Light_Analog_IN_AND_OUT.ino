@@ -31,16 +31,23 @@ void setup() {
 // take a third 'sensorVal' argument that is per loop cycle.
 // However inside the function I will only use analogRead once to ensure
 // I'm synchronized between light and speed for the function call.
-void readSensorValues(unsigned int *delayTime, unsigned int *pwmValue) {
+void readSensorValues(uint16_t *delayTime, uint8_t *pwmValue) {
+
+  uint16_t sensorVal = analogRead(A0); // because it returns 0-1023, that means it is 16bit unsigned.
+  
   // Cast map() results to unsigned int to prevent overflow issues
-  *delayTime = (unsigned int)map(sensorVal, MIN_SENSOR_VAL, MAX_SENSOR_VAL, MAX_DELAY, MIN_DELAY);
-  *pwmValue = (unsigned int)map(sensorVal, MIN_SENSOR_VAL, MAX_SENSOR_VAL, PWM_MIN, PWM_MAX);
+  *delayTime = (uint8_t)map(sensorVal, MIN_SENSOR_VAL, MAX_SENSOR_VAL, MAX_DELAY, MIN_DELAY);
+
+  // because PCM is 0-255, using uint8_t here as it is 8 bits unsigned.
+  *pwmValue = (uint8_t)map(sensorVal, MIN_SENSOR_VAL, MAX_SENSOR_VAL, PWM_MIN, PWM_MAX);
 }
 
 void loop() {
   int i;
   // these variables are going to be adjusted per the A0 input value.
-  unsigned int delayTime, pwmValue;
+  
+  uint16_t delayTime; // 16bit to hold the range we are working with.
+  uint8_t pwmValue;   // because we know the analog out is <=255 -> 8 bits.
   // Note, taking instruction from last week's solution, choosing to put 
   // the readSensorValues/analogRead inside each loop for accuracy.
   // could have extracted it outside this block if we wished.
