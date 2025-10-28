@@ -56,7 +56,7 @@ void resetScoreboard();
 
 void setup() {
   // Set up serial so we can see what's on.
-  Serial.begin(9900); 
+  Serial.begin(9600); 
   
   // Arduino random function needs setup, so I need to initialize it
   // here for use later. Using board time as the seed 'cos I can't use 
