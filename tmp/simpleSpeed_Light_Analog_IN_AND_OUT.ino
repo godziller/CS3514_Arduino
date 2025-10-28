@@ -7,8 +7,8 @@
 #define MIN_SENSOR_VAL 90  //value when darkest
 #define MAX_SENSOR_VAL 800 //value when brightest
 // LED Analog output range
-#define PWM_MIN = 0   // LED always OFF
-#define PWM_MAX = 255 // LED mostly ON (appears fully bright)
+#define PWM_MIN 0   // LED always OFF
+#define PWM_MAX 255 // LED mostly ON (appears fully bright)
 
 // PWM-capable pins on Arduino Uno
 int ledPins[NumberOfLEDS] = {3, 5, 6, 9, 10, 11};
