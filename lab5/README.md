@@ -1,69 +1,56 @@
-# ⚡️ High-Speed Arduino Reaction Timer
-
-This Arduino sketch implements a highly accurate, score-tracking reaction time tester featuring **Direct Port Manipulation** for minimal latency and a **harsh penalty** system for false starts.
+I can certainly convert the README summary into a detailed Markdown description, suitable for a project documentation page.
 
 ---
 
-## 🚀 Features
+# ⚡️ Reaction Time Tester (Direct Port Manipulation)
 
-* **Microsecond Accuracy:** Uses the `micros()` function for precise reaction timing.
-* **Direct Port Control:** Leverages **PORTB macros** (`SET_BIT_B`, `CLR_BIT_B`, `READ_BIT_B`) to read and write pins directly, avoiding the overhead of `digitalRead()` and `digitalWrite()`.
-* **Randomized Wait:** Implements a random delay between **0 and 10 seconds** before the GO signal to prevent anticipation.
-* **Score Tracking:** Calculates and reports the **Best Time** and a **Running Average** across multiple games.
-* **Forfeit Penalty:** If the player presses the button too early (False Start), they **forfeit the game**, and the entire **scoreboard is reset** to zero.
+This project implements a digital reaction time tester game using an **Arduino** (or compatible ATmega328p microcontroller), focusing on **direct port manipulation** to achieve microsecond-level timing precision and efficiency by minimizing software overhead.
 
 ---
 
-## 🔌 Hardware Setup
+## 🎯 Game Objective
 
-This code is written for an **Arduino Uno** (or similar ATmega328P-based board) and uses specific pins mapped to **PORTB**.
-
-| Component | Arduino Pin (Digital) | PORTB Bit | Function |
-| :--- | :--- | :--- | :--- |
-| **Start LED** | D8 | PB0 (`START_LED_BIT`) | Lights up to signal 'GO!' |
-| **Reaction Button** | D13 | PB5 (`BUTTON_BIT`) | Used to start and stop the timer |
-
-**Wiring Notes:**
-1.  The **Reaction Button** is connected between **Pin D13** and **GND**. The internal pull-up resistor is enabled in `setup()` to keep the pin HIGH when unpressed.
-2.  The **Start LED** is connected to **Pin D8** (with a current-limiting resistor) and **GND**.
+The player's goal is to press the **Stop Button** as quickly as possible after the **LED** (the "GO" signal) illuminates, measuring their reaction time with high accuracy.
 
 ---
 
-## ⚙️ Core Logic Breakdown
+## 🔌 Hardware Configuration
 
-The game runs through the following phases, handled within the main `loop()` function:
+All primary inputs and outputs for this game are consolidated onto **PORTD** for simplified register control. The code utilizes the **internal pull-up resistors** for the buttons.
 
-### 1. Wait for Start
-The code uses two sequential `while` loops to manage the initial button press:
-* Waits for the button press (LOW).
-* Waits for the **button release** (HIGH) to ensure the player's finger is lifted before the random wait begins.
-
-### 2. Random Wait & False Start Check (The Crucial Part)
-A random time (0-10000ms) is generated. The code loops, waiting for this time to elapse.
-* **Forfeit Condition:** Inside this loop, an `if` statement constantly checks the button state. If the button is pressed (`!READ_BIT_B(BUTTON_BIT)`), the **false start** is triggered:
-    * The **`resetScoreboard()`** function is called, wiping all previous best and average data.
-    * A harsh "TOO IMPATIENT" message is printed.
-    * `return;` is used to immediately exit the current game loop and start the next game cycle.
-
-### 3. GO Signal & Timing
-* The LED on D8 is lit (`SET_BIT_B(START_LED_BIT)`).
-* The high-resolution timer starts immediately (`startTime = micros();`).
-* The code enters a final tight `while` loop waiting for the reaction press.
-
-### 4. Results and Reporting
-* `reactionTime` is calculated.
-* The **`reportResults()`** function is called to handle all post-game tasks:
-    * Increments `gameCount`.
-    * Updates `totalReactionTime` and recalculates `averageReactionTime`.
-    * Compares current time to `bestTime` and updates if faster.
-    * Prints the current result and the running scoreboard to the Serial Monitor.
+| Component | Arduino Digital Pin | Port Bit | Function | Wiring (Required) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Start Button** | **Pin 4** | `PD4` | Initiates the random wait sequence. | Pin $\leftrightarrow$ **GND** |
+| **Stop Button** | **Pin 5** | `PD5` | Records the reaction time (Stop signal). | Pin $\leftrightarrow$ **GND** |
+| **Start LED** | **Pin 6** | `PD6` | The visual "GO" signal (Output). | Pin $\leftrightarrow$ **Resistor $\leftrightarrow$ GND** |
 
 ---
 
-## 🛠️ Key Functions
+## ⚙️ Direct Register Control
 
-| Function | Purpose |
-| :--- | :--- |
-| `setup()` | Initializes the Serial Monitor, seeds the random number generator using `micros()`, and sets up Pin D8 (Output) and Pin D13 (Input with Pull-up). |
-| `reportResults()` | **Calculates and displays all scoring statistics** (best time, average time, total games played) after a successful game. |
-| `resetScoreboard()` | **Resets all scoring variables** to their initial state (`bestTime` to max, `totalReactionTime` and `gameCount` to zero) upon a false start. |
+The project uses custom **macros** to directly access and control the microcontroller's low-level registers (`DDR`, `PORT`, `PIN`), bypassing the slower Arduino function calls.
+
+### **Macro Definitions**
+
+| Macro Family | Target Register | Purpose |
+| :--- | :--- | :--- |
+| `SET_BIT_D` / `CLR_BIT_D` | **PORTD** | Sets the pin's voltage (HIGH/LOW) for **Outputs**, or enables/disables the **Pull-up** for Inputs. |
+| `SET_DDRD_OUT` / `SET_DDRD_IN` | **DDRD** | Configures the pin direction as **Output ($1$)** or **Input ($0$)**. |
+| `READ_BIT_D` | **PIND** | Reads the current logical state of the physical pin. |
+
+### **Configuration Summary**
+
+* **LED (Pin 6):** Configured as an **Output** using `SET_DDRD_OUT(PD6)`.
+* **Buttons (Pins 4 & 5):** Configured as **Inputs** using `SET_DDRD_IN()` and have **internal pull-ups enabled** using `SET_BIT_D()` on their respective bits.
+
+---
+
+## 💡 Game Flow and Logic
+
+The game logic is structured to prevent false starts and provide precise timing:
+
+1.  **Start Sequence:** The system waits in a `while (READ_BIT_D(START_BUTTON_BIT))` loop until **Pin 4** is pressed (goes **LOW**) and then waits for it to be released.
+2.  **Random Delay:** A random wait time (`WAIT_MIN` ($0\text{ ms}$) to `WAIT_MAX` ($10,000\text{ ms}$)) is generated.
+3.  **False Start Check:** During the random delay, the code continuously checks the **Stop Button (Pin 5)**. If pressed prematurely, the player is penalized, and all running scores are reset via `resetScoreboard()`.
+4.  **GO Signal & Timing:** When the delay ends, the **LED (Pin 6)** is turned **ON**, and the reaction timer is started using `startTime = micros()`.
+5.  **Reaction Capture:** The code waits for the **Stop Button (Pin 5)** to be pressed. The final reaction time is calculated to microsecond precision, and results (current time, best time, average time) are reported via the Serial Monitor.
