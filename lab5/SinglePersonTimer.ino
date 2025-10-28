@@ -1,25 +1,25 @@
-// --- PORTB MACROS (Pins D8-D13) ---
+// --- PORTD MACROS (Pins D0-D7) ---
+// Note: All components (LED, Start, Stop) are now on PORTD.
 
-#define SET_BIT_B(BIT) (PORTB |= (1 << BIT))
-#define CLR_BIT_B(BIT) (PORTB &= ~(1 << BIT))
-#define READ_BIT_B(BIT) (PINB & (1 << BIT))
-
-// --- PORTD MACROS (Pins D0-D7 -  BUTTONS) ---
-// Sets a bit in PORTD (Used to enable PULLUP if pin is input)
+// Sets a bit in PORTD (Used to enable PULLUP or set OUTPUT HIGH)
 #define SET_BIT_D(BIT) (PORTD |= (1 << BIT))
-// Clears a bit in PORTD low 
-#define CLR_BIT_D(BIT) (DDRD &= ~(1 << BIT)) 
+// Clears a bit in PORTD (Used to turn OUTPUT LOW)
+#define CLR_BIT_D(BIT) (PORTD &= ~(1 << BIT))
 // Reads the state of a specific pin
 #define READ_BIT_D(BIT) (PIND & (1 << BIT))
 
+// Sets a pin as an OUTPUT (sets DDRD bit = 1)
+#define SET_DDRD_OUT(BIT) (DDRD |= (1 << BIT))
+// Sets a pin as an INPUT (sets DDRD bit = 0)
+#define SET_DDRD_IN(BIT) (DDRD &= ~(1 << BIT))
+
 
 // --- PIN DEFINITIONS ---
-// Reflect how we wire our solution - Pin8 for LED, pin 5 for Start, pin 6 for Stop.
-#define START_LED_BIT PB0   // Pin 8 (PB0) is the start signal LED.
+// Reflect how we wire our solution - Pin6 for LED, pin 4 for Start, pin 5 for Stop.
+#define START_BUTTON_BIT PD4 // Pin 4 (PD4) is the button to START the game.
+#define STOP_BUTTON_BIT PD5  // Pin 5 (PD5) is the button to STOP/calc reaction.
+#define START_LED_BIT PD6    // Pin 6 (PD6) is the start signal LED (OUTPUT).
 
-// Pins D5/D6 are used for buttons and belong to PORTD
-#define START_BUTTON_BIT PD5 // Pin 5 (PD5) is the button to START the game.
-#define STOP_BUTTON_BIT PD6  // Pin 6 (PD6) is the button to STOP/calc reaction.
 
 // Assignment Constraints for random number range
 // Used for random number/ wait time generation.
@@ -67,20 +67,20 @@ void setup() {
 
   // Set up input and output configuration - LED->out, Button->in
   
-  // LED (PORTB) Setup: Pin D8 (PB0) is OUTPUT
-  DDRB |= (1 << START_LED_BIT); // D8 (LED) is OUTPUT
-  
+  // LED (PORTD) Setup: Pin D6 (PD6) is OUTPUT
+  SET_DDRD_OUT(START_LED_BIT); // D6 is OUTPUT
+
   // BUTTONS (PORTD) Setup
-  
-  // Explicitly clear the DDRD bits for D5 and D6 to ensure they are INPUTS
-  DDRD &= ~((1 << START_BUTTON_BIT) | (1 << STOP_BUTTON_BIT));
+  // Explicitly clear the DDRD bits for D4 and D5 to ensure they are INPUTS
+  SET_DDRD_IN(START_BUTTON_BIT); // D4 is INPUT
+  SET_DDRD_IN(STOP_BUTTON_BIT);  // D5 is INPUT
 
   // Need to turn off LED and enable button for PULLUP
-  CLR_BIT_B(START_LED_BIT);  // D8 LED OFF
+  CLR_BIT_D(START_LED_BIT);  // D6 LED OFF (using PORTD macro to set pin low)
   
   // Enable PULLUP for both buttons by setting the PORTD bits
-  SET_BIT_D(START_BUTTON_BIT); // D5 Enable PULLUP
-  SET_BIT_D(STOP_BUTTON_BIT);  // D6 Enable PULLUP
+  SET_BIT_D(START_BUTTON_BIT); // D4 Enable PULLUP
+  SET_BIT_D(STOP_BUTTON_BIT);  // D5 Enable PULLUP
 }
 
 
@@ -89,7 +89,7 @@ void loop() {
   // We begin with a print to screen
   Serial.println("\nPress Button to start game!");
   
-  // A loop waiting for user to press button (Start Button - D5).
+  // A loop waiting for user to press button (Start Button - D4).
   while (READ_BIT_D(START_BUTTON_BIT)) {
     // Using debounce because especially this game likely to happen.
     delay(50); 
@@ -116,7 +116,7 @@ void loop() {
   while (millis() - randomStartTime < randomWaitTime) {
     
     // Is while we are waiting here for the go signal
-    // that a player may falsely press the button (Stop Button - D6).
+    // that a player may falsely press the button (Stop Button - D5).
     // if they do that we need to clear out all the game stats data
     // they lose big time!!
     if (!READ_BIT_D(STOP_BUTTON_BIT)) {
@@ -140,14 +140,14 @@ void loop() {
   }
 
   // Game ON! light LED to signal to player to react.
-  SET_BIT_B(START_LED_BIT); 
+  SET_BIT_D(START_LED_BIT); // D6 LED ON
   
   // Immediately start the timer to time the user reaction.
   startTime = micros(); 
-  Serial.println("GO! GO! GO!, PRESS STOP BUTTON (D6)!!");
+  Serial.println("GO! GO! GO!, PRESS STOP BUTTON (D5)!!");
   
   
-  // Loop while the button is UNPRESSED (Stop Button - D6 is HIGH)
+  // Loop while the button is UNPRESSED (Stop Button - D5 is HIGH)
   while (READ_BIT_D(STOP_BUTTON_BIT)) {
     // Breaking out of this signals Player has pressed button.
   }
@@ -157,7 +157,7 @@ void loop() {
   reactionTime = endTime - startTime;
 
   // Turn the start signal LED OFF in prep for new game.
-  CLR_BIT_B(START_LED_BIT); 
+  CLR_BIT_D(START_LED_BIT); // D6 LED OFF
 
   // hand over to function to do the printing...
   reportResults(reactionTime); 
