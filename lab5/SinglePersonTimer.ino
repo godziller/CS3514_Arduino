@@ -1,12 +1,10 @@
 // --- PORTB MACROS (Pins D8-D13) ---
-// Choosing to use the same port for button and led - PORTB.
-// But naming carefully with _B, so coder understands dealing with 
-// PORTB. 
+
 #define SET_BIT_B(BIT) (PORTB |= (1 << BIT))
 #define CLR_BIT_B(BIT) (PORTB &= ~(1 << BIT))
 #define READ_BIT_B(BIT) (PINB & (1 << BIT))
 
-// --- PORTD MACROS (Pins D0-D7 - NEW FOR BUTTONS) ---
+// --- PORTD MACROS (Pins D0-D7 -  BUTTONS) ---
 // Sets a bit in PORTD (Used to enable PULLUP if pin is input)
 #define SET_BIT_D(BIT) (PORTD |= (1 << BIT))
 // Clears a bit in PORTD low 
