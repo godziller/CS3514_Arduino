@@ -3,10 +3,12 @@
 #define ASSERT(expr) if (!(expr)) {printf("The Following Failed: %s\n", #expr); exit(1);}
 #define MIN_DELAY 5   // time in ms
 #define MAX_DELAY 500 // time in ms
+// Analog Input Sensor
 #define MIN_SENSOR_VAL 90  //value when darkest
 #define MAX_SENSOR_VAL 800 //value when brightest
-#define PWM_MIN = 0   → LED always OFF
-#define PWM_MAX = 255 → LED mostly ON (appears fully bright)
+// LED Analog output range
+#define PWM_MIN = 0   // LED always OFF
+#define PWM_MAX = 255 // LED mostly ON (appears fully bright)
 
 // PWM-capable pins on Arduino Uno
 int ledPins[NumberOfLEDS] = {3, 5, 6, 9, 10, 11};
