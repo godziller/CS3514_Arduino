@@ -6,7 +6,7 @@
 #define CLR_BIT_B(BIT) (PORTB &= ~(1 << BIT))
 #define READ_BIT_B(BIT) (PINB & (1 << BIT))
 
-// --- PORTD MACROS (Pins D0-D7 - NEW FOR BUTTONS) ---
+// --- PORTD MACROS (Pins D0-D7 - BUTTONS) ---
 // Sets a bit in PORTD (Used to enable PULLUP if pin is input)
 #define SET_BIT_D(BIT) (PORTD |= (1 << BIT))
 // Clears a bit in PORTD low 
