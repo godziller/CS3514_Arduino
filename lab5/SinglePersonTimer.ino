@@ -6,11 +6,10 @@
 #define CLR_BIT_B(BIT) (PORTB &= ~(1 << BIT))
 #define READ_BIT_B(BIT) (PINB & (1 << BIT))
 
-// --- PORTD MACROS (Pins D0-D7 - BUTTONS) ---
+// --- PORTD MACROS (Pins D0-D7 - NEW FOR BUTTONS) ---
 // Sets a bit in PORTD (Used to enable PULLUP if pin is input)
 #define SET_BIT_D(BIT) (PORTD |= (1 << BIT))
 // Clears a bit in PORTD low 
-// *** CRITICAL FIX: This macro must target DDRD to set the pin as an INPUT (0) ***
 #define CLR_BIT_D(BIT) (DDRD &= ~(1 << BIT)) 
 // Reads the state of a specific pin
 #define READ_BIT_D(BIT) (PIND & (1 << BIT))
@@ -75,16 +74,13 @@ void setup() {
   
   // BUTTONS (PORTD) Setup
   
-  // We use the CLR_BIT_D macro (now fixed to target DDRD) 
-  // to explicitly set D5 and D6 as INPUTS (DDR bit = 0)
-  CLR_BIT_D(START_BUTTON_BIT); // D5 (Start Button) is INPUT
-  CLR_BIT_D(STOP_BUTTON_BIT);  // D6 (Stop Button) is INPUT
+  // Explicitly clear the DDRD bits for D5 and D6 to ensure they are INPUTS
+  DDRD &= ~((1 << START_BUTTON_BIT) | (1 << STOP_BUTTON_BIT));
 
   // Need to turn off LED and enable button for PULLUP
   CLR_BIT_B(START_LED_BIT);  // D8 LED OFF
   
   // Enable PULLUP for both buttons by setting the PORTD bits
-  // We use the SET_BIT_D macro (which targets PORTD)
   SET_BIT_D(START_BUTTON_BIT); // D5 Enable PULLUP
   SET_BIT_D(STOP_BUTTON_BIT);  // D6 Enable PULLUP
 }
@@ -96,7 +92,6 @@ void loop() {
   Serial.println("\nPress Button to start game!");
   
   // A loop waiting for user to press button (Start Button - D5).
-  // The loop waits while the button is HIGH (unpressed).
   while (READ_BIT_D(START_BUTTON_BIT)) {
     // Using debounce because especially this game likely to happen.
     delay(50); 
@@ -104,7 +99,7 @@ void loop() {
   
   // Need this also because the player may have kept the button
   // depressed. So this waits for the button to be released.
-  // The loop waits while the button is LOW (pressed).
+  
   while (!READ_BIT_D(START_BUTTON_BIT)) { 
     // Using debounce because especially this game likely to happen.
     delay(50); 
