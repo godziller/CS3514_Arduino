@@ -50,7 +50,7 @@ void setup() {
 void readSensorValues(unsigned int *delayTime, unsigned int *pwmValue) {
   DEBUG_PRINT("  Entering readSensorValues()\n");
   
-  int sensorVal = analogRead(A0);
+  unsigned int sensorVal = analogRead(A0);
   
   // Cast map() results to unsigned int to prevent overflow issues
   *delayTime = (unsigned int)map(sensorVal, MIN_SENSOR_VAL, MAX_SENSOR_VAL, MAX_DELAY, MIN_DELAY);
